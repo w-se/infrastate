@@ -294,3 +294,20 @@
                              (r/spec :x
                                      :ispec {:a 1 :b 2}
                                      :build #(assoc % :c 3)))))))
+
+(deftest resource-updater-is-called
+  (testing "if a resource is in state :needs-update the update function is called"
+    (is (match? {:x {:resource {:v 10} :state :spawned}
+                 ::state/iterations 1}
+                (state/spawn {:x {:resource {:v 9} :state :needs-update}}
+                             [(r/spec :x
+                                      :ispec {:v 10}
+                                      :update (fn [{:keys [res inputs]}] (assoc res :v (:v inputs))))]))))
+
+  (testing "if a resource is in state :spawned with changed ispec the update function is called ONCE"
+    (is (match? {:x {:resource {:v 10} :state :spawned}
+                 ::state/iterations 2}
+                (state/spawn {:x {:resource {:v 9} :state :spawned}}
+                             [(r/spec :x
+                                      :ispec {:v 10}
+                                      :update (fn [{:keys [res inputs]}] (update res :v inc)))])))))
