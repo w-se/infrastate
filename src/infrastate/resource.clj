@@ -75,13 +75,59 @@
   resources/ResourceFnMetaData
   (resource-keys [_] resource-keys))
 
-(defn spec [rname & {do-fn :do :keys [ispec dspec spawner updater deleter]
+(defn spec
+  "
+  Specifies how to create a single resource.
+
+  rname is a keyword (qualified or not) that defines the resource's
+  name. It must be unique within the managed state. You can use any
+  name except the :infrastate/... namespace, which is reserved.
+
+  ispec is the specification used to calculate the input. It can be
+  any valid clojure data structure or primitive. 10, #{:foo} and
+  {:x [{:a 1}]} #{[1] [:x]} are all valid values. ispec can also be a
+  or contain one or more functions. If there is a function it must
+  accept one argument. This argument will be the dependency map, which
+  is defined by dspec. This function will be called during input
+  resolution. The resulting value (of taking the ispec and replacing
+  all functions by there return value) will be the input. See
+  the resolve-inputs function for details, it's quite simple
+
+  dspec is a set of keywords, specifying dependencies. It evaluates by
+  (select-keys state dspec) but also filters by resource state. This
+  resource will only be spawned once all dependencies are
+  available. The dependencies will be resolved to the referenced
+  resources and made available to the build, spawn, update and delete
+  functions. The resulting dependencies map is basis for calculating
+  inputs.
+
+  build is a function taking one argument. The argument is the input
+  defined by ispec. This is a simplified convencience function for
+  spawn.
+
+  If you specify spawn, build has no effect. spawn performs the
+  desired side effect and returns its state entry. It can throw
+  exceptions, which will result in abortion of the spawn process. If
+  spawn returns nil, the resource will be in :failed state.
+
+  update is like spawn, it performs some side effect and returns the
+  updated state entry. It also receives a current version of the state
+  entry and the input.
+
+  delete is supposed to undo the side effect that spawn performed. It
+  can update the state entry to register the deletion, but it does not
+  have to. It can throw exceptions. An exception thrown will be caught
+  and deletion will be retried. This default behavior is meant to
+  facilitate deletions that sometimes fail due to undetected
+  dependencies.
+  "
+  [rname & {:keys [ispec dspec build spawn update delete]
                      :or {ispec {}
                           dspec #{}
-                          do-fn identity
-                          spawner (fn [{:keys [inputs]}] (do-fn inputs))
-                          updater nil
-                          deleter nil}}]
+                          build identity
+                          spawn (fn [{:keys [inputs]}] (build inputs))
+                          update nil
+                          delete nil}}]
   (let [dspec (set dspec)
         resource-fn
         (fn [state]
@@ -106,14 +152,14 @@
                        resource)
 
                      (= rstate :needs-update)
-                     (res-update updater resource deps inputs rname)
+                     (res-update update resource deps inputs rname)
 
                      (or (= rstate :delete) (= rstate :delete-retry))
-                     (res-delete deleter state resource deps inputs rname delete-tries-left)
+                     (res-delete delete state resource deps inputs rname delete-tries-left)
 
                      (or (nil? resource)
                          (= rstate :unresolved-deps)) ;; we're in the else, so they are now resolved
-                     (let [new-resource (spawner {:deps deps :inputs inputs})]
+                     (let [new-resource (spawn {:deps deps :inputs inputs})]
                        (if (some? new-resource)
                          {:resource new-resource
                           :inputs inputs

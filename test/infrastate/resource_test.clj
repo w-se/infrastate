@@ -32,7 +32,7 @@
          :a {:state :spawned
              :inputs {:i1 "bar"}
              :resource {:x "bar"}}}
-        (r/spec :a :ispec {:i1 "foo"} :spawner (fn [{:keys [inputs]}] {:x (:i1 inputs)}))))))
+        (r/spec :a :ispec {:i1 "foo"} :spawn (fn [{:keys [inputs]}] {:x (:i1 inputs)}))))))
 
 (deftest deep-nested-dep
   (testing "deep nested dep and with-dep resolve as well"
@@ -51,7 +51,7 @@
         (r/spec :a
                 :ispec {:i1 #(do % (throw (ex-info "boom!" {})))}
                 :dspec [:b-that-does-not-exist]
-                :spawner (fn [_] nil))))))
+                :spawn (fn [_] nil))))))
 
 (deftest updaters
   (testing "resource moves from :spawned to :needs-update when inputs change"
@@ -61,7 +61,7 @@
           {:a {:resource {:x 9} :state :spawned}}
           (r/spec :a
                   :ispec {:x 10}
-                  :updater (fn [{:keys [inputs]}] inputs))))))
+                  :update (fn [{:keys [inputs]}] inputs))))))
 
   (testing ":needs-update attempts to update the resource"
     (is (match?
@@ -70,7 +70,7 @@
           {:a {:resource {:x 9} :state :needs-update}}
           (r/spec :a
                   :ispec {:x 10}
-                  :updater (fn [{:keys [inputs]}] inputs))))))
+                  :update (fn [{:keys [inputs]}] inputs))))))
 
   (testing "missing updater puts resource into stable state"
     (is (match?
@@ -132,7 +132,7 @@
         ;; dep1 attempting to delete
         {}
         #(assoc-in % [:dep1 :state] :delete)
-        [dependant-fn (r/spec :dep1 :ispec {} :deleter (constantly nil)) (r/spec :dep2 :ispec {})]
+        [dependant-fn (r/spec :dep1 :ispec {} :delete (constantly nil)) (r/spec :dep2 :ispec {})]
         {:R :spawned :dep1 :delete}
 
         ;; dep1 missing and then spawned
@@ -156,7 +156,7 @@
         ;; R can be deleted
         {}
         #(assoc-in % [:R :state] :delete)
-        [(r/spec :R :deleter (constantly nil))]
+        [(r/spec :R :delete (constantly nil))]
         {:dep1 :spawned :dep2 :spawned :R :deleted}))))
 
 (deftest state-successions
@@ -293,4 +293,4 @@
                 (state/spawn {}
                              (r/spec :x
                                      :ispec {:a 1 :b 2}
-                                     :do #(assoc % :c 3)))))))
+                                     :build #(assoc % :c 3)))))))
