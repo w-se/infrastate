@@ -1,8 +1,13 @@
-(defproject infrastate "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
-  :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
-            :url "https://www.eclipse.org/legal/epl-2.0/"}
+(defproject org.clojars.w-se/infrastate "0.0.5"
+  :description "Leightweight Infrastructure State Management Library"
+  :url "http://github.com/w-se/infrastate"
+  :license {:name "MIT" :url "https://www.mit.edu/~amini/LICENSE.md"}
+
+  :repositories [["publish" {:url "https://clojars.org/repo"
+                             :username :env/CLOJARS_USERNAME
+                             :password :env/CLOJARS_PASSWORD
+                             :sign-releases false}]]
+
    :dependencies [[org.clojure/clojure "1.11.1"]
                   [com.rpl/specter "1.1.4"]]
   :profiles {:dev { :dependencies [[nubank/matcher-combinators "3.5.0"]]}}
