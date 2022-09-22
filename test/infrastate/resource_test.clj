@@ -159,6 +159,7 @@
         [(r/spec :R :delete (constantly nil))]
         {:dep1 :spawned :dep2 :spawned :R :deleted}))))
 
+
 (deftest state-successions
   (testing "foo depends on bar, bar gets marked for deletion"
     (is

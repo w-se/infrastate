@@ -36,7 +36,7 @@
   (->> state
        (filter (fn [[_ {:keys [state depends-on]}]]
                  (and (states-for-resource-to-be-considered-dependant state)
-                      (contains? depends-on me))))
+                      (contains? (set depends-on) me))))
        (map first)))
 
 (defn res-update [updater {:keys [resource] :as state-entry} deps inputs rname]
