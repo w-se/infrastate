@@ -1,4 +1,4 @@
-(defproject org.clojars.w-se/infrastate "0.0.5"
+(defproject org.clojars.w-se/infrastate "0.0.6"
   :description "Leightweight Infrastructure State Management Library"
   :url "http://github.com/w-se/infrastate"
   :license {:name "MIT" :url "https://www.mit.edu/~amini/LICENSE.md"}
